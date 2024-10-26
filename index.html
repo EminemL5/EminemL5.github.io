@@ -194,16 +194,15 @@
             const phone = localStorage.getItem('telefono');
             const address = localStorage.getItem('direccion');
             const country = localStorage.getItem('pais');
-            isStoreOpen = JSON.parse(localStorage.getItem('isOpen') || 'true');
-            updateStoreStatus();
-
-            // Agregar un event listener para cambios en localStorage
-            window.addEventListener('storage', (event) => {
-                if (event.key === 'isOpen') {
-                    isStoreOpen = JSON.parse(event.newValue);
+            
+            // Usar una ruta relativa para acceder al estado de la tienda
+            fetch('../app-state.json')
+                .then(response => response.json())
+                .then(data => {
+                    isStoreOpen = data.isOpen;
                     updateStoreStatus();
-                }
-            });
+                })
+                .catch(error => console.error('Error loading store state:', error));
 
             document.getElementById('business-logo').src = logo || 'https://via.placeholder.com/50';
             document.getElementById('business-name').textContent = name || 'Tienda Virtual';
@@ -227,6 +226,16 @@
                 statusElement.classList.add('text-red-500');
                 statusElement.classList.remove('text-green-500');
             }
+
+            // Actualiza el estado en el archivo JSON
+            fetch('../app-state.json', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ isOpen: isStoreOpen }),
+            })
+            .catch(error => console.error('Error updating store state:', error));
         }
 
         function loadProducts() {
@@ -658,6 +667,27 @@
                 alert('Cupón inválido');
             }
         }
+
+        // Elimina el siguiente código:
+        // window.addEventListener('storage', (event) => {
+        //     if (event.key === 'isOpen') {
+        //         isStoreOpen = JSON.parse(event.newValue);
+        //         updateStoreStatus();
+        //     }
+        // });
+
+        // Agrega este código después de la función loadBusinessInfo():
+        setInterval(() => {
+            fetch('../app-state.json')
+                .then(response => response.json())
+                .then(data => {
+                    if (isStoreOpen !== data.isOpen) {
+                        isStoreOpen = data.isOpen;
+                        updateStoreStatus();
+                    }
+                })
+                .catch(error => console.error('Error updating store state:', error));
+        }, 5000); // Verifica cada 5 segundos
     </script>
 </body>
 </html>
